@@ -34,6 +34,8 @@ const columns: Column<LeaseStatusHistory>[] = [
   {
     key: "newStatus",
     header: "New Status",
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant="default">
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}

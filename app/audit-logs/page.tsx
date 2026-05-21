@@ -37,11 +37,15 @@ const columns: Column<AuditLog>[] = [
     key: "action",
     header: "Action",
     sortable: true,
+    filterable: true,
+    filterType: "select",
   },
   {
     key: "tableName",
     header: "Table",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A",
   },
   {

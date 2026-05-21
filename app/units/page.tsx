@@ -29,6 +29,8 @@ const columns: Column<Unit>[] = [
     key: "unitNumber",
     header: "Unit Number",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "building",
@@ -44,6 +46,8 @@ const columns: Column<Unit>[] = [
     key: "usageType",
     header: "Usage Type",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A",
   },
   {
@@ -62,6 +66,8 @@ const columns: Column<Unit>[] = [
     key: "status",
     header: "Status",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => {
       const variants = {
         vacant: "secondary",

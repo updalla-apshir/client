@@ -19,7 +19,10 @@ export interface CrudPageProps<T extends { id: number | string }> {
   };
   searchPlaceholder?: string;
   enablePolling?: boolean;
-  pollingInterval?: number; // in milliseconds
+  pollingInterval?: number;
+  selectable?: boolean;
+  pageSize?: number;
+  pageSizeOptions?: number[];
 }
 
 export function CrudPage<T extends { id: number | string }>({
@@ -29,14 +32,19 @@ export function CrudPage<T extends { id: number | string }>({
   api,
   searchPlaceholder,
   enablePolling = false,
-  pollingInterval = 30000, // 30 seconds default
+  pollingInterval = 30000,
+  selectable = false,
+  pageSize,
+  pageSizeOptions,
 }: CrudPageProps<T>) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<T | null>(null);
   const [deletingItem, setDeletingItem] = useState<T | null>(null);
+  const [bulkDeleteItems, setBulkDeleteItems] = useState<T[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const fetchData = useCallback(async (showLoading = true) => {
@@ -55,7 +63,7 @@ export function CrudPage<T extends { id: number | string }>({
         retryCount++;
 
         if (retryCount <= maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 5000); // Exponential backoff, max 5s
+          const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 5000);
           console.log(`Retrying data fetch in ${delay}ms (attempt ${retryCount}/${maxRetries})`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
@@ -67,10 +75,9 @@ export function CrudPage<T extends { id: number | string }>({
   }, [api]);
 
   useEffect(() => {
-    fetchData(); // eslint-disable-line react-hooks/set-state-in-effect
+    fetchData();
   }, [fetchData]);
 
-  // Polling effect for data synchronization
   useEffect(() => {
     if (!enablePolling) return;
 
@@ -98,12 +105,16 @@ export function CrudPage<T extends { id: number | string }>({
     setDeleteDialogOpen(true);
   };
 
+  const handleBulkDelete = (items: T[]) => {
+    setBulkDeleteItems(items);
+    setBulkDeleteDialogOpen(true);
+  };
+
   const handleFormSubmit = async (formData: Partial<T>) => {
     try {
       setSubmitting(true);
 
       if (editingItem) {
-        // Optimistic update: Update item in local state immediately
         const updatedItem = { ...editingItem, ...formData };
         setData(prevData => prevData.map(item =>
           item.id === editingItem.id ? updatedItem : item
@@ -115,21 +126,16 @@ export function CrudPage<T extends { id: number | string }>({
             toast.success("Item updated successfully");
           }
         } catch (updateError) {
-          // Rollback optimistic update on failure
           setData(prevData => prevData.map(item =>
             item.id === editingItem.id ? editingItem : item
           ));
           throw updateError;
         }
-
-        // For updates, don't fetch immediately to preserve sort order
-        // Polling will sync data eventually
       } else {
-        // Optimistic update: Add item to local state immediately
         const tempId = `temp-${Date.now()}`;
         const optimisticItem = {
           ...formData,
-          id: tempId, // Temporary ID that won't conflict with real IDs
+          id: tempId,
           createdAt: new Date().toISOString(),
         } as unknown as T;
         setData(prevData => [...prevData, optimisticItem]);
@@ -137,24 +143,21 @@ export function CrudPage<T extends { id: number | string }>({
         try {
           if (api.create) {
             const createdItem = await api.create(formData);
-            // Replace optimistic item with real data
             setData(prevData => prevData.map(item =>
               item.id === tempId ? createdItem : item
             ));
             toast.success("Item created successfully");
           }
         } catch (createError) {
-          // Rollback optimistic update on failure
           setData(prevData => prevData.filter(item => item.id !== tempId));
           throw createError;
         }
 
-        // For creates, fetch after to ensure new item appears
         await fetchData();
       }
     } catch (error) {
       console.error("Failed to save item:", error);
-      throw error; // Re-throw to prevent modal from closing
+      throw error;
     } finally {
       setSubmitting(false);
     }
@@ -172,7 +175,23 @@ export function CrudPage<T extends { id: number | string }>({
       }
     } catch (error) {
       console.error("Failed to delete item:", error);
-      throw error; // Re-throw to prevent dialog from closing
+      throw error;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    if (!api.delete || bulkDeleteItems.length === 0) return;
+
+    try {
+      setSubmitting(true);
+      await Promise.all(bulkDeleteItems.map(item => api.delete!(item.id)));
+      toast.success(`${bulkDeleteItems.length} items deleted successfully`);
+      await fetchData();
+    } catch (error) {
+      console.error("Bulk delete failed:", error);
+      throw error;
     } finally {
       setSubmitting(false);
     }
@@ -187,10 +206,14 @@ export function CrudPage<T extends { id: number | string }>({
         onEdit={api.update ? handleEdit : undefined}
         onDelete={api.delete ? handleDelete : undefined}
         onPrint={api.print}
+        onBulkDelete={api.delete && selectable ? handleBulkDelete : undefined}
         searchable
         searchPlaceholder={searchPlaceholder}
         loading={loading}
         title={title}
+        selectable={selectable}
+        pageSize={pageSize}
+        pageSizeOptions={pageSizeOptions}
       />
 
       <FormModal
@@ -210,6 +233,15 @@ export function CrudPage<T extends { id: number | string }>({
         onConfirm={handleDeleteConfirm}
         title={`Delete ${title.slice(0, -1)}`}
         itemName={(deletingItem as any)?.name || (deletingItem as any)?.title || String(deletingItem?.id)}
+        loading={submitting}
+      />
+
+      <DeleteDialog
+        isOpen={bulkDeleteDialogOpen}
+        onClose={() => setBulkDeleteDialogOpen(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        title={`Delete ${bulkDeleteItems.length} items`}
+        description={`Are you sure you want to delete ${bulkDeleteItems.length} items? This action cannot be undone.`}
         loading={submitting}
       />
     </div>

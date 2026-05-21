@@ -50,6 +50,8 @@ const columns: Column<Payment>[] = [
     key: "method",
     header: "Method",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant={value === "completed" ? "default" : value === "pending" ? "secondary" : "destructive"}>
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}

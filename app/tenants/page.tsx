@@ -19,11 +19,15 @@ const columns: Column<Tenant>[] = [
     key: "name",
     header: "Name",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "type",
     header: "Type",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A",
   },
   {

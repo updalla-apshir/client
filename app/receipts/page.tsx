@@ -22,6 +22,8 @@ const columns: Column<Receipt>[] = [
     key: "receiptNumber",
     header: "Receipt #",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "paymentId",

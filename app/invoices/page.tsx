@@ -24,11 +24,13 @@ interface Invoice {
 }
 
   const columns: Column<Invoice>[] = [
-    {
-      key: "invoiceNumber",
-      header: "Invoice #",
-      sortable: true,
-    },
+  {
+    key: "invoiceNumber",
+    header: "Invoice #",
+    sortable: true,
+    filterable: true,
+    filterType: "text",
+  },
     {
       key: "lease",
       header: "Lease",
@@ -82,10 +84,12 @@ interface Invoice {
         return `${row.items.length} items (${breakdown})`;
       },
     },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
+  {
+    key: "status",
+    header: "Status",
+    sortable: true,
+    filterable: true,
+    filterType: "select",
       render: (value, row) => {
         const total = Number(row.totalAmount);
         const paid = Number(row.paidAmount);

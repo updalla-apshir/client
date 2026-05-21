@@ -21,6 +21,8 @@ const columns: Column<Property>[] = [
     key: "name",
     header: "Name",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "address",
@@ -31,11 +33,15 @@ const columns: Column<Property>[] = [
     key: "city",
     header: "City",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "country",
     header: "Country",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "landArea",
@@ -104,7 +110,7 @@ export default function PropertiesPage() {
         }}
         searchPlaceholder="Search properties..."
         enablePolling={true}
-        pollingInterval={15000} // Poll every 15 seconds
+        pollingInterval={15000}
       />
     </PageLayout>
   );

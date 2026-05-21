@@ -22,16 +22,22 @@ const columns: Column<User>[] = [
     key: "name",
     header: "Name",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "email",
     header: "Email",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "role",
     header: "Role",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant={value === "admin" ? "default" : "secondary"}>
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}
@@ -42,6 +48,8 @@ const columns: Column<User>[] = [
     key: "status",
     header: "Status",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant={value === "active" ? "default" : "destructive"}>
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}

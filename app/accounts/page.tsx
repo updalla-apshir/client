@@ -23,11 +23,15 @@ const columns: Column<Account>[] = [
     key: "name",
     header: "Account Name",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "type",
     header: "Type",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant="outline">
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}
@@ -43,6 +47,8 @@ const columns: Column<Account>[] = [
     key: "currency",
     header: "Currency",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "balance",
@@ -54,6 +60,8 @@ const columns: Column<Account>[] = [
     key: "status",
     header: "Status",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant={value === "active" ? "default" : "destructive"}>
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}

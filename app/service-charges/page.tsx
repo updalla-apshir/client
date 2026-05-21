@@ -26,6 +26,8 @@ const columns: Column<ServiceCharge>[] = [
     key: "name",
     header: "Charge Name",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A",
   },
   {

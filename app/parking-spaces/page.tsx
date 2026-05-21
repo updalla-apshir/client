@@ -30,6 +30,8 @@ const columns: Column<ParkingSpace>[] = [
     key: "slotNumber",
     header: "Slot #",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "monthlyFee",
@@ -41,6 +43,8 @@ const columns: Column<ParkingSpace>[] = [
     key: "status",
     header: "Status",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant={value === "available" ? "default" : value === "assigned" ? "secondary" : "outline"}>
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}

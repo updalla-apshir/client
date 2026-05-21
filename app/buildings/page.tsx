@@ -27,6 +27,8 @@ const columns: Column<Building>[] = [
     key: "name",
     header: "Name",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "property",
@@ -37,6 +39,8 @@ const columns: Column<Building>[] = [
     key: "type",
     header: "Type",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => value ? (value.charAt(0).toUpperCase() + value.slice(1).replace("_", " ")) : "N/A",
   },
   {
@@ -54,6 +58,8 @@ const columns: Column<Building>[] = [
     key: "status",
     header: "Status",
     sortable: true,
+    filterable: true,
+    filterType: "select",
   },
   {
     key: "createdAt",

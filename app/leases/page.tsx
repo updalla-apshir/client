@@ -34,6 +34,8 @@ const columns: Column<Lease>[] = [
     key: "leaseNumber",
     header: "Lease #",
     sortable: true,
+    filterable: true,
+    filterType: "text",
   },
   {
     key: "tenant",
@@ -61,6 +63,8 @@ const columns: Column<Lease>[] = [
     key: "status",
     header: "Status",
     sortable: true,
+    filterable: true,
+    filterType: "select",
     render: (value) => (
       <Badge variant={value === "active" ? "default" : value === "terminated" ? "destructive" : "secondary"}>
         {value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A"}
@@ -72,6 +76,14 @@ const columns: Column<Lease>[] = [
     header: "Deposit",
     sortable: true,
     render: (value) => `$${value}`,
+  },
+  {
+    key: "depositStatus",
+    header: "Deposit Status",
+    sortable: true,
+    filterable: true,
+    filterType: "select",
+    render: (value) => value ? (value.charAt(0).toUpperCase() + value.slice(1)) : "N/A",
   },
   {
     key: "parkingSpaces",
