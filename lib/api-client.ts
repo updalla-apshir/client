@@ -1,0 +1,240 @@
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
+import { toast } from "sonner";
+
+class ApiClient {
+  private baseURL: string;
+
+  constructor(baseURL: string = API_BASE_URL) {
+    this.baseURL = baseURL;
+  }
+
+   private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    const config: RequestInit = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    // Log the request data for debugging
+    if (options.body) {
+      console.log('Request URL:', url);
+      console.log('Request Body:', options.body);
+    }
+
+    try {
+      const response = await fetch(url, config);
+
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        throw new Error('Unauthorized - redirecting to login');
+      }
+
+      if (!response.ok) {
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage += ` - ${errorData.message}`;
+          } else if (errorData.error) {
+            errorMessage += ` - ${errorData.error}`;
+          }
+          console.error('API Error Response:', errorData);
+        } catch (parseError) {
+          // If we can't parse the error response, just use the status
+          console.error('Could not parse error response');
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      console.error('API request failed:', error);
+      toast.error(message, { duration: 5000 });
+      throw error;
+    }
+  }
+
+  // Generic CRUD methods
+  async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' });
+  }
+
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    const startTime = Date.now();
+    try {
+      const result = await this.request<T>(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+      const endTime = Date.now();
+      console.log(`POST ${endpoint} took ${endTime - startTime}ms`);
+      return result;
+    } catch (error) {
+      const endTime = Date.now();
+      console.error(`POST ${endpoint} failed after ${endTime - startTime}ms:`, error);
+      throw error;
+    }
+  }
+
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async patch<T>(endpoint: string, data?: any): Promise<T> {
+    const startTime = Date.now();
+    try {
+      const result = await this.request<T>(endpoint, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+      const endTime = Date.now();
+      console.log(`PATCH ${endpoint} took ${endTime - startTime}ms`);
+      return result;
+    } catch (error) {
+      const endTime = Date.now();
+      console.error(`PATCH ${endpoint} failed after ${endTime - startTime}ms:`, error);
+      throw error;
+    }
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
+  }
+
+  // Specific entity methods
+  getProperties = async (): Promise<any[]> => {
+    const startTime = Date.now();
+    try {
+      const response = await this.get('/properties');
+      const endTime = Date.now();
+      console.log(`Properties fetch took ${endTime - startTime}ms`);
+      return (response as any).data || response; // Handle both paginated and direct responses
+    } catch (error) {
+      const endTime = Date.now();
+      console.error(`Properties fetch failed after ${endTime - startTime}ms:`, error);
+      throw error;
+    }
+  }
+
+  getBuildings = async (): Promise<any[]> => {
+    const response = await this.get('/buildings');
+    return (response as any).data || response; // Handle both paginated and direct responses
+  }
+
+  getUnits = async (): Promise<any[]> => {
+    const response = await this.get('/units');
+    return (response as any).data || response; // Handle both paginated and direct responses
+  }
+
+  getTenants = async (): Promise<any[]> => {
+    const response = await this.get('/tenants');
+    return (response as any).data || response; // Handle both paginated and direct responses
+  }
+
+  getLeases = async (): Promise<any[]> => {
+    const response = await this.get('/leases');
+    return (response as any).data || response; // Handle both paginated and direct responses
+  }
+
+  getInvoices = async (): Promise<any[]> => {
+    const response = await this.get('/invoices');
+    return (response as any).data || response; // Handle both paginated and direct responses
+  }
+
+  getPayments = async (): Promise<any[]> => {
+    const response = await this.get('/payments');
+    return (response as any).data || response; // Handle both paginated and direct responses
+  }
+
+  getAccounts = async (): Promise<any[]> => {
+    const response = await this.get('/accounts');
+    return (response as any).data || response;
+  }
+
+  getReceipts = async (): Promise<any[]> => {
+    const response = await this.get('/receipts');
+    return (response as any).data || response;
+  }
+
+  getParkingSpaces = async (): Promise<any[]> => {
+    const response = await this.get('/parking-spaces');
+    return (response as any).data || response;
+  }
+
+  getServiceCharges = async (): Promise<any[]> => {
+    const response = await this.get('/service-charges');
+    return (response as any).data || response;
+  }
+
+  getUsers = async (): Promise<any[]> => {
+    const response = await this.get('/users');
+    return (response as any).data || response; // Handle both paginated and direct responses
+  }
+
+  getAuditLogs = async (): Promise<any[]> => {
+    const response = await this.get('/audit-logs');
+    return (response as any).data || response;
+  }
+
+  getLeaseHistory = async (): Promise<any[]> => {
+    const response = await this.get('/lease-status-history');
+    return (response as any).data || response;
+  }
+
+  getInvoiceItems = async (invoiceId: number): Promise<any[]> => {
+    const response = await this.get(`/invoice-items/invoice/${invoiceId}`);
+    return (response as any).data || response;
+  }
+
+  getDashboardStats = async (): Promise<any> => {
+    return this.get('/dashboard/stats');
+  }
+
+  getTenantDebts = async (): Promise<any[]> => {
+    const response = await this.get('/tenants/debts');
+    return (response as any).data || response;
+  }
+
+  getTenantDebt = async (tenantId: number): Promise<any> => {
+    return this.get(`/tenants/${tenantId}/debt`);
+  }
+
+  getDashboardMonthlyRevenue = async (): Promise<any[]> => {
+    return this.get('/dashboard/revenue');
+  }
+
+  getDashboardRecentPayments = async (limit = 10): Promise<any[]> => {
+    return this.get(`/dashboard/recent-payments?limit=${limit}`);
+  }
+
+  getDashboardRecentActivity = async (limit = 10): Promise<any[]> => {
+    return this.get(`/dashboard/recent-activity?limit=${limit}`);
+  }
+
+  getDashboardExpiringLeases = async (days = 30): Promise<any[]> => {
+    return this.get(`/dashboard/expiring-leases?days=${days}`);
+  }
+
+  getDashboardInvoiceStatus = async (): Promise<any> => {
+    return this.get('/dashboard/invoice-status');
+  }
+}
+
+export const apiClient = new ApiClient();
