@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,7 +37,7 @@ function SignInForm() {
   const onsubmit = async (data: { email: string; password: string }) => {
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:3000/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

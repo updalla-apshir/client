@@ -23,18 +23,7 @@ class ApiClient {
         throw new Error('No authentication token - redirecting to login');
       }
 
-      try {
-        const payloadBase64 = token.split('.')[1];
-        const payload = JSON.parse(atob(payloadBase64));
-        if (payload.exp && Date.now() >= payload.exp * 1000) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-          throw new Error('Token expired - redirecting to login');
-        }
-      } catch (e) {
-        // Allow server to validate if decode fails
-      }
+      // Server handles token validation; no client-side expiration check
     }
 
     const controller = new AbortController();
@@ -87,10 +76,8 @@ class ApiClient {
       return await response.json();
     } catch (error) {
       clearTimeout(timeoutId);
-      if (
-        error instanceof TypeError ||
-        (error instanceof Error && error.message.includes('Unauthorized'))
-      ) {
+      // Only clear token on actual 401 from server, not on network errors
+      if (error instanceof Error && error.message.includes('Unauthorized')) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         if (typeof window !== 'undefined') {
