@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -39,6 +40,7 @@ export type FormFieldType =
   | "password"
   | "textarea"
   | "select"
+  | "searchable-select"
   | "multi-select"
   | "date";
 
@@ -51,6 +53,13 @@ export interface FormFieldConfig {
   options?: { label: string; value: string | number; disabled?: boolean }[];
   validation?: z.ZodType<any>;
   disabled?: boolean;
+  searchableConfig?: {
+    onSearch?: (value: string) => void;
+    onLoadMore?: () => void;
+    loading?: boolean;
+    hasMore?: boolean;
+    detailsPanel?: (value: string | number | undefined) => React.ReactNode;
+  };
 }
 
 interface FormModalProps {
@@ -75,11 +84,11 @@ export function FormModal({
   loading = false,
 }: FormModalProps) {
   // Normalize defaultValues based on field types
-  const normalizedDefaults = fields.reduce((acc, field) => {
+  const normalizedDefaults = useMemo(() => fields.reduce((acc, field) => {
     const value = defaultValues[field.name];
     if (value !== undefined) {
       if (field.type === "number") {
-        acc[field.name] = typeof value === "string" ? Number(value) || 0 : Number(value) || 0;
+        acc[field.name] = String(value ?? "");
       } else if (field.type === "select") {
         acc[field.name] = String(value);
       } else if (field.type === "multi-select") {
@@ -108,10 +117,10 @@ export function FormModal({
       acc[field.name] = "";
     }
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, any>), [fields, defaultValues]);
 
   // Create dynamic Zod schema based on fields
-  const schema = z.object(
+  const schema = useMemo(() => z.object(
     fields.reduce((acc, field) => {
       let fieldSchema: z.ZodType<any>;
 
@@ -123,7 +132,7 @@ export function FormModal({
             fieldSchema = z.string().email("Invalid email address");
             break;
           case "number":
-            fieldSchema = z.number();
+            fieldSchema = z.string();
             break;
           case "date":
             fieldSchema = z.string();
@@ -131,15 +140,20 @@ export function FormModal({
           case "multi-select":
             fieldSchema = z.array(z.number()).optional();
             break;
+          case "searchable-select":
+            fieldSchema = z.union([z.string(), z.number()]);
+            break;
           default:
             fieldSchema = z.string();
         }
 
         if (field.required) {
           if (field.type === "number") {
-            fieldSchema = (fieldSchema as z.ZodNumber).min(0, `${field.label} is required`);
+            fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.label} is required`);
           } else if (field.type === "multi-select") {
             fieldSchema = (fieldSchema as z.ZodArray<z.ZodNumber>).min(1, `${field.label} is required`);
+          } else if (field.type === "searchable-select") {
+            fieldSchema = fieldSchema;
           } else {
             fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.label} is required`);
           }
@@ -151,18 +165,21 @@ export function FormModal({
       acc[field.name] = fieldSchema;
       return acc;
     }, {} as Record<string, z.ZodType<any>>)
-  );
+  ), [fields]);
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: normalizedDefaults,
   });
 
+  const prevIsOpen = useRef(false);
+  
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpen.current) {
       form.reset(normalizedDefaults);
     }
-  }, [isOpen, defaultValues, form]);
+    prevIsOpen.current = isOpen;
+  }, [isOpen, form]);
 
   const handleSubmit = async (data: any) => {
     try {
@@ -247,6 +264,23 @@ export function FormModal({
                     ))}
                   </SelectContent>
                 </Select>
+              ) : field.type === "searchable-select" ? (
+                <SearchableSelect
+                  value={formField.value}
+                  onSelect={(val) => formField.onChange(val)}
+                  options={field.options?.map((o) => ({
+                    value: o.value,
+                    label: o.label,
+                  })) || []}
+                  onSearch={field.searchableConfig?.onSearch}
+                  loading={field.searchableConfig?.loading}
+                  hasMore={field.searchableConfig?.hasMore}
+                  onLoadMore={field.searchableConfig?.onLoadMore}
+                  detailsPanel={field.searchableConfig?.detailsPanel}
+                  placeholder={field.placeholder}
+                  searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
+                  disabled={field.disabled}
+                />
               ) : field.type === "multi-select" ? (
                 <div className="space-y-2">
                   {field.options?.map((option) => (
@@ -279,14 +313,7 @@ export function FormModal({
                   type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
                   placeholder={field.placeholder}
                   disabled={field.disabled}
-                   onChange={(e) => {
-                     if (field.type === "number") {
-                       const numValue = Number(e.target.value);
-                       formField.onChange(isNaN(numValue) ? 0 : numValue);
-                     } else {
-                       formField.onChange(e.target.value);
-                     }
-                   }}
+                   onChange={(e) => formField.onChange(e.target.value)}
                   value={formField.value ?? ""}
                 />
               )}

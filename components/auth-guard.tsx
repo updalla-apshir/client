@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 
 export function AuthGuard({ children }: { children: ReactNode }) {
-  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
-      router.push("/login");
+      window.location.href = "/login";
+    } else {
+      setHasToken(true);
     }
-  }, [router]);
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !hasToken) return null;
 
   return <>{children}</>;
 }

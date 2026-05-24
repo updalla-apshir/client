@@ -1,5 +1,4 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
-import { toast } from "sonner";
 
 class ApiClient {
   private baseURL: string;
@@ -14,7 +13,32 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
 
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    let token: string | null = null;
+
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('token');
+
+      if (!token) {
+        window.location.href = '/login';
+        throw new Error('No authentication token - redirecting to login');
+      }
+
+      try {
+        const payloadBase64 = token.split('.')[1];
+        const payload = JSON.parse(atob(payloadBase64));
+        if (payload.exp && Date.now() >= payload.exp * 1000) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error('Token expired - redirecting to login');
+        }
+      } catch (e) {
+        // Allow server to validate if decode fails
+      }
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const config: RequestInit = {
       headers: {
@@ -22,10 +46,10 @@ class ApiClient {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...options.headers,
       },
+      signal: controller.signal,
       ...options,
     };
 
-    // Log the request data for debugging
     if (options.body) {
       console.log('Request URL:', url);
       console.log('Request Body:', options.body);
@@ -33,6 +57,8 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config);
+
+      clearTimeout(timeoutId);
 
       if (response.status === 401) {
         localStorage.removeItem('token');
@@ -53,7 +79,6 @@ class ApiClient {
           }
           console.error('API Error Response:', errorData);
         } catch (parseError) {
-          // If we can't parse the error response, just use the status
           console.error('Could not parse error response');
         }
         throw new Error(errorMessage);
@@ -61,9 +86,17 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
-      console.error('API request failed:', error);
-      toast.error(message, { duration: 5000 });
+      clearTimeout(timeoutId);
+      if (
+        error instanceof TypeError ||
+        (error instanceof Error && error.message.includes('Unauthorized'))
+      ) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      }
       throw error;
     }
   }
@@ -149,8 +182,14 @@ class ApiClient {
   }
 
   getLeases = async (): Promise<any[]> => {
-    const response = await this.get('/leases');
-    return (response as any).data || response; // Handle both paginated and direct responses
+    const response = await this.get('/leases?limit=100');
+    return (response as any).data || response;
+  }
+
+  searchLeases = async (search: string, page = 1, limit = 20): Promise<any> => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.set('search', search);
+    return this.get(`/leases?${params.toString()}`);
   }
 
   getInvoices = async (): Promise<any[]> => {

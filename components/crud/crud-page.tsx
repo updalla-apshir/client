@@ -152,8 +152,6 @@ export function CrudPage<T extends { id: number | string }>({
           setData(prevData => prevData.filter(item => item.id !== tempId));
           throw createError;
         }
-
-        await fetchData();
       }
     } catch (error) {
       console.error("Failed to save item:", error);

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api-client";
 import {
   BuildingIcon, HomeIcon, UsersIcon, FileTextIcon,
-  CreditCardIcon, ReceiptIcon, AlertTriangleIcon,
+  CreditCardIcon, ReceiptIcon,
   DollarSignIcon, CalendarIcon, ActivityIcon,
 } from "lucide-react";
 import {
@@ -142,8 +142,7 @@ export default function DashboardPage() {
   return (
     <PageLayout title="Dashboard" breadcrumbs={["Dashboard"]}>
       <div className="space-y-6">
-   
-
+    
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {statCards.map((card, index) => (
