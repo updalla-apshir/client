@@ -58,15 +58,25 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        let errorMessage = `HTTP error! status: ${response.status}`;
+        let errorMessage = response.statusText || `Request failed (${response.status})`;
         try {
-          const errorData = await response.json();
-          if (errorData.message) {
-            errorMessage += ` - ${errorData.message}`;
-          } else if (errorData.error) {
-            errorMessage += ` - ${errorData.error}`;
+          const text = await response.text();
+          const errorData = text ? JSON.parse(text) : {};
+          if (errorData.error) {
+            if (typeof errorData.error === 'string') {
+              errorMessage = errorData.error;
+            } else {
+              if (errorData.error.message) errorMessage = errorData.error.message;
+              if (errorData.error.details && Array.isArray(errorData.error.details)) {
+                const detailMessages = errorData.error.details.map(
+                  (d: any) => d.field ? `${d.field}: ${d.message}` : d.message,
+                );
+                errorMessage = detailMessages.join('; ');
+              }
+            }
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
           }
-          console.error('API Error Response:', errorData);
         } catch (parseError) {
           console.error('Could not parse error response');
         }
@@ -94,18 +104,12 @@ class ApiClient {
   }
 
   async post<T>(endpoint: string, data?: any): Promise<T> {
-    const startTime = Date.now();
     try {
-      const result = await this.request<T>(endpoint, {
+      return await this.request<T>(endpoint, {
         method: 'POST',
         body: JSON.stringify(data),
       });
-      const endTime = Date.now();
-      console.log(`POST ${endpoint} took ${endTime - startTime}ms`);
-      return result;
     } catch (error) {
-      const endTime = Date.now();
-      console.error(`POST ${endpoint} failed after ${endTime - startTime}ms:`, error);
       throw error;
     }
   }

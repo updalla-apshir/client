@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -220,7 +221,8 @@ export function FormModal({
       onClose();
       form.reset();
     } catch (error) {
-      console.error("Form submission failed:", error);
+      const message = error instanceof Error ? error.message : "Form submission failed";
+      toast.error(message);
     }
   };
 

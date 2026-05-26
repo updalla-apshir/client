@@ -154,7 +154,6 @@ export function CrudPage<T extends { id: number | string }>({
         }
       }
     } catch (error) {
-      console.error("Failed to save item:", error);
       throw error;
     } finally {
       setSubmitting(false);
