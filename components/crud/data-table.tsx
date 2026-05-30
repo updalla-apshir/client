@@ -63,6 +63,8 @@ interface DataTableProps<T> {
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   onPrint?: (item: T) => void;
+  canEdit?: (item: T) => boolean;
+  canDelete?: (item: T) => boolean;
   onBulkDelete?: (items: T[]) => void;
   searchable?: boolean;
   searchPlaceholder?: string;
@@ -110,6 +112,8 @@ export function DataTable<T extends { id: number | string }>({
   onDelete,
   onPrint,
   onBulkDelete,
+  canEdit,
+  canDelete,
   searchable = true,
   searchPlaceholder = "Search...",
   loading = false,
@@ -303,7 +307,9 @@ export function DataTable<T extends { id: number | string }>({
   );
 
   const pageNumbers = getPageNumbers(safeCurrentPage, totalPages);
-  const showActionsColumn = !!(onEdit || onDelete || onPrint);
+  const showActionsColumn = !!(onEdit || onDelete || onPrint) && paginatedData.some(
+    i => (onEdit && (!canEdit || canEdit(i))) || (onDelete && (!canDelete || canDelete(i))) || onPrint
+  );
 
   return (
     <div className="space-y-4">
@@ -582,10 +588,10 @@ export function DataTable<T extends { id: number | string }>({
                         : String(item[column.key as keyof T] ?? "")}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete || onPrint) && (
+                  {showActionsColumn && (
                     <TableCell>
                       <div className="flex items-center justify-end gap-1">
-                        {onEdit && (
+                        {onEdit && (!canEdit || canEdit(item)) && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -607,7 +613,7 @@ export function DataTable<T extends { id: number | string }>({
                             <Printer className="h-3.5 w-3.5" />
                           </Button>
                         )}
-                        {onDelete && (
+                        {onDelete && (!canDelete || canDelete(item)) && (
                           <Button
                             variant="ghost"
                             size="icon"

@@ -23,6 +23,8 @@ export interface CrudPageProps<T extends { id: number | string }> {
   selectable?: boolean;
   pageSize?: number;
   pageSizeOptions?: number[];
+  canEdit?: (item: T) => boolean;
+  canDelete?: (item: T) => boolean;
 }
 
 export function CrudPage<T extends { id: number | string }>({
@@ -36,6 +38,8 @@ export function CrudPage<T extends { id: number | string }>({
   selectable = false,
   pageSize,
   pageSizeOptions,
+  canEdit,
+  canDelete,
 }: CrudPageProps<T>) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -204,6 +208,8 @@ export function CrudPage<T extends { id: number | string }>({
         onDelete={api.delete ? handleDelete : undefined}
         onPrint={api.print}
         onBulkDelete={api.delete && selectable ? handleBulkDelete : undefined}
+        canEdit={canEdit}
+        canDelete={canDelete}
         searchable
         searchPlaceholder={searchPlaceholder}
         loading={loading}

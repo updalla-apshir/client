@@ -265,6 +265,22 @@ class ApiClient {
   getDashboardInvoiceStatus = async (): Promise<any> => {
     return this.get('/dashboard/invoice-status');
   }
+
+  // Profile
+  getProfile = async (): Promise<any> => {
+    const response = await this.get('/profile');
+    return (response as any).data || response;
+  }
+
+  updateProfile = async (data: any): Promise<any> => {
+    const response = await this.patch('/profile', data);
+    return (response as any).data || response;
+  }
+
+  changePassword = async (data: any): Promise<any> => {
+    const response = await this.patch('/profile/password', data);
+    return (response as any).data || response;
+  }
 }
 
 export const apiClient = new ApiClient();

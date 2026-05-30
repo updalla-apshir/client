@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useEffect, useState } from "react"
+import * as React from "react";
+import { useEffect, useState } from "react";
 
-import { NavMain } from "@/components/nav-main"
+import { NavMain } from "@/components/nav-main";
 import {
   Sidebar,
   SidebarContent,
@@ -12,9 +12,20 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { BuildingIcon, HomeIcon, Grid3x3Icon, UsersIcon, FileTextIcon, ReceiptIcon, CreditCardIcon, CarIcon, FileCheckIcon, LayoutDashboardIcon } from "lucide-react"
-import { hasMenuAccess, type UserRole } from "@/lib/permissions"
+} from "@/components/ui/sidebar";
+import {
+  BuildingIcon,
+  HomeIcon,
+  Grid3x3Icon,
+  UsersIcon,
+  FileTextIcon,
+  ReceiptIcon,
+  CreditCardIcon,
+  CarIcon,
+  FileCheckIcon,
+  LayoutDashboardIcon,
+} from "lucide-react";
+import { hasMenuAccess, type UserRole } from "@/lib/permissions";
 
 // This is sample data.
 const data = {
@@ -136,7 +147,7 @@ const data = {
       ],
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [role, setRole] = useState<UserRole | null>(null);
@@ -150,7 +161,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, []);
 
   const filteredGroups = data.navGroups.filter((group) =>
-    hasMenuAccess(role, group.title)
+    hasMenuAccess(role, group.title),
   );
 
   return (
@@ -158,13 +169,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="group-data-[collapsible=icon]:!p-2!">
+            <SidebarMenuButton
+              size="lg"
+              className="group-data-[collapsible=icon]:!p-2!"
+            >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <BuildingIcon className="size-5" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                  Commercial
+                  PropertyTrack
                 </span>
               </div>
             </SidebarMenuButton>
@@ -176,5 +190,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

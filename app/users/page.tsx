@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { CrudPage } from "@/components/crud/crud-page";
 import { PageLayout } from "@/components/page-layout";
 import { apiClient } from "@/lib/api-client";
@@ -116,6 +117,15 @@ const formFields: FormFieldConfig[] | ((item: User | null) => FormFieldConfig[])
  ];
 
 export default function UsersPage() {
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+  }, []);
+
   return (
     <PageLayout title="Users" breadcrumbs={["Dashboard", "Users"]}>
       <CrudPage
@@ -129,6 +139,8 @@ export default function UsersPage() {
           delete: (id) => apiClient.delete(`/users/${id}`),
         }}
         searchPlaceholder="Search users..."
+        canEdit={(item) => currentUser && item.role !== "admin"}
+        canDelete={(item) => currentUser && item.role !== "admin"}
       />
     </PageLayout>
   );
